@@ -1,7 +1,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 COPY . .
-WORKDIR /app/DevOpsProject
+WORKDIR /app
 RUN dotnet restore
 RUN dotnet publish DevOpsProject.CommunicationControl.API.csproj -c Release -o /publish
 

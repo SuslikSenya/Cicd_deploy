@@ -1,0 +1,96 @@
+# name: CI/CD Pipeline
+
+# on:
+#   push:
+#     branches:
+#       - main
+#       - dev
+#   workflow_dispatch:
+
+# env:
+#   REGISTRY: ghcr.io/your-username  # замени на свой registry
+#   IMAGE_TAG: 1.0.${{ github.run_number }}
+#   REDIS_URL: ${{ secrets.REDIS_URL }}
+
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v3
+
+#       # Backend build (dotnet)
+#       - name: Build com-control
+#         run: |
+#           cd src/CommunicationControl
+#           dotnet publish -c Release -o ./published DevOpsProject/DevOpsProject.CommunicationControl.API.csproj
+
+#       # Backend build (dotnet)
+#       - name: Build hivemind-api
+#         run: |
+#           cd src/CommunicationControl
+#           dotnet publish -c Release -o ./published DevOpsProject.HiveMind.API/DevOpsProject.HiveMind.API.csproj  
+
+#       # Frontend build (node)
+#       - name: Build map-client
+#         run: |
+#           cd src/MapClient
+#           npm ci
+#           npm run build
+
+#       - name: Upload build artifacts
+#         uses: actions/upload-artifact@v3
+#         with:
+#           name: backend
+#           path: src/CommunicationControl/published
+
+#   docker:
+#     needs: build
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v3
+
+#       - name: Download build artifacts
+#         uses: actions/download-artifact@v3
+#         with:
+#           name: backend
+
+#       - name: Login to Registry
+#         run: echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ${{ env.REGISTRY }} -u "${{ secrets.REGISTRY_USER }}" --password-stdin
+
+#       - name: Build and push communication-control image
+#         run: |
+#           docker build -t ${{ env.REGISTRY }}/communication-control:${{ env.IMAGE_TAG }} -f src/CommunicationControl/Dockerfile .
+#           docker push ${{ env.REGISTRY }}/communication-control:${{ env.IMAGE_TAG }}
+
+#       - name: Build and push hive-mind image
+#         run: |
+#           docker build -t ${{ env.REGISTRY }}/hive-mind:${{ env.IMAGE_TAG }} -f src/HiveMind/Dockerfile .
+#           docker push ${{ env.REGISTRY }}/hive-mind:${{ env.IMAGE_TAG }}
+
+#       - name: Build and push map-client image
+#         run: |
+#           docker build -t ${{ env.REGISTRY }}/map-client:${{ env.IMAGE_TAG }} -f src/MapClient/Dockerfile .
+#           docker push ${{ env.REGISTRY }}/map-client:${{ env.IMAGE_TAG }}
+
+#   deploy:
+#   needs: docker
+#   runs-on: ubuntu-latest
+#   steps:
+#     - name: Setup kubectl
+#       uses: azure/setup-kubectl@v3
+#       with:
+#         version: 'latest'
+
+#     - name: Configure kubeconfig
+#       run: |
+#         echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 -d > $HOME/.kube/config
+
+#     - name: Replace image tags in manifests
+#       run: |
+#         find deployment/app -type f -name '*.yaml' -exec sed -i \
+#           -e "s|image: .*communication-control.*|image: ${{ env.REGISTRY }}/communication-control:${{ env.IMAGE_TAG }}|g" \
+#           -e "s|image: .*hive-mind.*|image: ${{ env.REGISTRY }}/hive-mind:${{ env.IMAGE_TAG }}|g" \
+#           -e "s|image: .*map-client.*|image: ${{ env.REGISTRY }}/map-client:${{ env.IMAGE_TAG }}|g" {} +
+
+#     - name: Deploy to Kubernetes
+#       run: kubectl apply -f deployment/app
