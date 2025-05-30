@@ -1,0 +1,49 @@
+version: "3.9"
+name: kpi-demo 
+ 
+services: 
+  redis: 
+    image: redis:latest
+    container_name: redis 
+    restart: always 
+    ports: 
+      - "6379:6379" 
+    networks: 
+      - backend 
+  
+  communication-control: 
+    image: communication-control 
+    container_name: com-control 
+    restart: always 
+    environment: 
+      Redis__ConnectionString: "redis:6379" 
+    ports: 
+      - "8080:8080" 
+    networks: 
+      - backend 
+ 
+  hive-mind:
+    image: hive-mind
+    container_name: hive-mind
+    restart: always
+    ports: 
+     - "5149:5149"
+    networks:
+     - backend
+
+
+  map-client:
+    image: map-client
+    container_name: map-client
+    restart: always
+    ports:
+      - "8081:80"
+    volumes:
+      - ./config.json:/usr/share/nginx/html/config.json:ro
+    networks:
+      - backend
+
+
+networks: 
+  backend:
+    driver: bridge
