@@ -4,7 +4,7 @@ WORKDIR /app
 RUN groupadd --gid 1000 appuser && \ 
     useradd --uid 1000 --gid appuser --shell /bin/bash --create-home appuser
 
-RUN dotnet publish DevOpsProject.CommunicationControl.API.csproj -c Release -o /publish
+RUN dotnet publish DevOpsProject.CommunicationControl.API.csproj -c Release -o /published
 
 COPY --chown=appuser:appuser published/ ./ 
 USER appuser
