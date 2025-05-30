@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hivemind-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hivemind-api
+  template:
+    metadata:
+      labels:
+        app: hivemind-api
+    spec:
+      containers:
+        - name: hivemind-api
+          image: registry.digitalocean.com/kpi-demo/hiveemulator:hivemind-api
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5149
+          env:
+            - name: CommunicationConfiguration__CommunicationControlIP
+              value: com-control
+            - name: CommunicationConfiguration__CommunicationControlPath
+              value: control/api/v1/hive
+            - name: CommunicationConfiguration__CommunicationControlPort
+              value: "80"
+      imagePullSecrets:
+        - name: digitalocean-registry-secret

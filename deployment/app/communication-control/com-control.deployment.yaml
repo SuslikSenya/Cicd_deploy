@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: com-control
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: com-control
+  template:
+    metadata:
+      labels:
+        app: com-control
+    spec:
+      containers:
+        - name: com-control
+          image: registry.digitalocean.com/kpi-demo/hiveemulator:communication-control
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: Redis__ConnectionString
+              value: redis:6379
+            - name: BasePath
+              value: /control
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "10m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+      imagePullSecrets:
+        - name: digitalocean-registry-secret
