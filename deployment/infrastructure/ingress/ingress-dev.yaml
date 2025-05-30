@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+  namespace: dev
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  ingressClassName: nginx-dev
+  rules:
+    - http:
+        paths:
+          - path: /communication
+            pathType: Prefix
+            backend:
+              service:
+                name: communication-control
+                port:
+                  number: 80
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: map-client
+                port:
+                  number: 80

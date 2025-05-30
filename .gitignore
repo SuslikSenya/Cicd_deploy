@@ -16,5 +16,5 @@ obj/
 build/
 publish/
 published/
-app/
+# app/
 *.sh

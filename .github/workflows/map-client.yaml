@@ -1,0 +1,66 @@
+name: Build & Deploy CommunicationControl
+
+on:
+  push:
+    branches: [ main, dev ]
+  workflow_dispatch:
+
+env:
+  IMAGE_BASE: registry.digitalocean.com/kpi-demo/hiveemulator:map-client
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/MapClient
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set variables for branch and commit
+        run: |
+          BRANCH_NAME=${GITHUB_REF##*/}
+          SHORT_SHA=${GITHUB_SHA::7}
+          echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_ENV
+          echo "SHORT_SHA=${SHORT_SHA}" >> $GITHUB_ENV
+
+      - name: Log in to DigitalOcean Container Registry
+        run: echo "${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}" | docker login registry.digitalocean.com -u kpi_token --password-stdin
+
+      - name: Build Docker image
+        run: |
+          docker build -f Dockerfile -t ${{ env.IMAGE_BASE }}-${BRANCH_NAME}-${SHORT_SHA} .
+
+      - name: Push Docker image
+        run: |
+          docker push ${{ env.IMAGE_BASE }}-${BRANCH_NAME}-${SHORT_SHA}
+
+      - name: Set up kubeconfig
+        run: |
+          echo "${{ secrets.KUBECONFIG_DEV }}" | base64 -d > $HOME/.kube/config
+
+      - name: Apply Ingress for DEV
+        if: ${{ env.BRANCH_NAME == 'dev' }}
+        run: kubectl apply -f deployment/app/ingress/app-ingress-dev.yaml
+
+      - name: Apply Ingress for MAIN
+        if: ${{ env.BRANCH_NAME == 'main' }}
+        run: kubectl apply -f deployment/app/ingress/app-ingress-main.yaml
+
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl config set-context --current --namespace=${BRANCH_NAME}
+          kubectl set image deployment/communication-control communication-control=${{ env.IMAGE_BASE }}-${BRANCH_NAME}-${SHORT_SHA}
+          kubectl rollout status deployment/communication-control
+
+      - name: Set VITE_API_BASE_URL env var
+        run: |
+          if [[ "${BRANCH_NAME}" == "main" ]]; then
+            LB_IP=${{ secrets.LB_IP_MAIN }}
+          else
+            LB_IP=${{ secrets.LB_IP_DEV }}
+          fi
+
+          kubectl set env deployment/map-client VITE_API_BASE_URL=http://$LB_IP/communication/api/v1/client -n $BRANCH_NAME

@@ -2,19 +2,19 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: app-ingress
-  namespace: default
+  namespace: main
   annotations:
     nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
-  ingressClassName: nginx
+  ingressClassName: nginx-main
   rules:
     - http:
         paths:
-          - path: /control
+          - path: /communication
             pathType: Prefix
             backend:
               service:
-                name: com-control
+                name: communication-control
                 port:
                   number: 80
           - path: /
