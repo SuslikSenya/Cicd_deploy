@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: src/CommunicationControl
+        working-directory: src\CommunicationControl\DevOpsProject
 
     steps:
       - name: Checkout repository
