@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime Add commentMore actions
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app 
 
 RUN groupadd --gid 1000 appuser && \ 
