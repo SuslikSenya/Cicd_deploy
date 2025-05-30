@@ -3,7 +3,11 @@ WORKDIR /src
 
 COPY . .
 
-RUN dotnet publish DevOpsProject.CommunicationControl.API.csproj -c Release -o /app/publish
+# Проверка содержимого (можно удалить после отладки)
+RUN ls -la
+
+RUN dotnet restore
+RUN dotnet publish -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
