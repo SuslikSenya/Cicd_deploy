@@ -25,7 +25,19 @@ jobs:
           SHORT_SHA=${GITHUB_SHA::7}
           echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_ENV
           echo "SHORT_SHA=${SHORT_SHA}" >> $GITHUB_ENV
+            # Устанавливаем Node.js
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
+        
       - name: Log in to DigitalOcean Container Registry
         run: echo "${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}" | docker login registry.digitalocean.com -u kpi_token --password-stdin
 
