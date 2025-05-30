@@ -1,14 +1,20 @@
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime 
-WORKDIR /app 
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
 
-RUN groupadd --gid 1000 appuser && \ 
+COPY . .
+
+RUN dotnet publish DevOpsProject.HiveMind.API.CommunicationControl.API.csproj -c Release -o /app/publish
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+WORKDIR /app
+
+RUN groupadd --gid 1000 appuser && \
     useradd --uid 1000 --gid appuser --shell /bin/bash --create-home appuser
 
-RUN dotnet publish DevOpsProject.HiveMind.API.CommunicationControl.API.csproj -c Release -o /published
-
-COPY --chown=appuser:appuser published/ ./ 
+COPY --chown=appuser:appuser --from=build /app/publish ./
 
 USER appuser
-EXPOSE 5149 
- 
+
+EXPOSE 5149
+
 ENTRYPOINT ["dotnet", "DevOpsProject.HiveMind.API.dll"]
