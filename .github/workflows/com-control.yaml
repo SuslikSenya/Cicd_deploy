@@ -11,9 +11,10 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     defaults:
       run:
-        working-directory: src/CommunicationControl/DevOpsProject
+        working-directory: .  # корень репо
 
     steps:
       - name: Checkout repository
@@ -31,18 +32,15 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Publish project
-        run: dotnet publish -c Release -o published
-
-      - name: Log in to DigitalOcean Container Registry
-        run: echo "${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}" | docker login registry.digitalocean.com -u kpi_token --password-stdin
+      - name: Restore dependencies (optional if done inside Docker)
+        run: dotnet restore src/CommunicationControl/DevOpsProject/DevOpsProject.CommunicationControl.API.csproj
 
       - name: Build Docker image
         run: |
-          docker build -f Dockerfile -t ${{ env.IMAGE_BASE }}-${BRANCH_NAME}-${SHORT_SHA} .
+          docker build -f Dockerfile.communicationcontrol -t ${{ env.IMAGE_BASE }}-${BRANCH_NAME}-${SHORT_SHA} .
+
+      - name: Log in to DigitalOcean Container Registry
+        run: echo "${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}" | docker login registry.digitalocean.com -u kpi_token --password-stdin
 
       - name: Push Docker image
         run: |
