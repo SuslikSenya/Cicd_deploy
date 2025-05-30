@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: src\CommunicationControl\DevOpsProject.HiveMind.API
+        working-directory: src/CommunicationControl/DevOpsProject.HiveMind.API
 
     steps:
       - name: Checkout repository
