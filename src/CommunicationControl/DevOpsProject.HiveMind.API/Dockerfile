@@ -1,13 +1,41 @@
+# Этап сборки
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
-COPY . .
-WORKDIR /app
-RUN dotnet restore
-RUN dotnet publish DevOpsProject.HiveMind.API.csproj -c Release -o /publish
 
+# Копируем только нужные файлы для восстановления зависимостей
+COPY src/CommunicationControl/DevOpsProject.HiveMind.API/*.csproj ./DevOpsProject.HiveMind.API/
+RUN dotnet restore ./DevOpsProject.HiveMind.API/DevOpsProject.HiveMind.API.csproj
+
+# Копируем весь исходный код
+COPY src/CommunicationControl/DevOpsProject.HiveMind.API ./DevOpsProject.HiveMind.API/
+
+# Публикуем проект в режиме Release в папку /publish
+RUN dotnet publish ./DevOpsProject.HiveMind.API/DevOpsProject.HiveMind.API.csproj -c Release -o /publish
+
+# Этап выполнения
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
+
+# Копируем артефакты из этапа сборки
 COPY --from=build /publish .
 
-EXPOSE 5149
+EXPOSE 8080
+
 ENTRYPOINT ["dotnet", "DevOpsProject.HiveMind.API.dll"]
+
+
+
+
+
+# FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime Add commentMore actions
+# WORKDIR /app 
+
+# RUN groupadd --gid 1000 appuser && \ 
+#     useradd --uid 1000 --gid appuser --shell /bin/bash --create-home appuser
+
+# COPY --chown==appuser:appuser published/ ./ 
+
+# USER appuser
+# EXPOSE 5149 
+ 
+# ENTRYPOINT ["dotnet", "DevOpsProject.HiveMind.API.dll"]
