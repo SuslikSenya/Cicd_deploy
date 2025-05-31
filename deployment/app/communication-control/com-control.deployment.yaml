@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: com-control
 spec:
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
       app: com-control
