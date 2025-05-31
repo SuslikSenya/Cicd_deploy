@@ -53,10 +53,19 @@ jobs:
         run: |
           mkdir -p $HOME/.kube
           echo "${{ secrets.KUBECONFIG_DEV }}" | base64 -d > $HOME/.kube/config
+          cat $HOME/.kube/config
+
+      - name: Check kubectl connectivity
+        run: |
+          kubectl version --client
+          kubectl cluster-info
+          kubectl get nodes
+          kubectl config current-context
+          kubectl config view
 
       - name: Deploy to Kubernetes
         run: |
           kubectl config set-context --current --namespace=${BRANCH_NAME}
-          kubectl apply -f ../../../deployment/app/communication-control/com-control.deployment.yaml -n dev
+          kubectl apply -f ../../../deployment/app/communication-control/com-control.deployment.yaml -n ${BRANCH_NAME}
           kubectl set image deployment/com-control com-control=${{ env.IMAGE_BASE }}-${BRANCH_NAME}-${SHORT_SHA}
           kubectl rollout status deployment/com-control
