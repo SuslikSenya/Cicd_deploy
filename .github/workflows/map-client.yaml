@@ -54,19 +54,20 @@ jobs:
           mkdir -p $HOME/.kube
           echo "${{ secrets.KUBECONFIG_DEV }}" | base64 -d > $HOME/.kube/config
 
-      - name: Apply Ingress for DEV
-        if: ${{ env.BRANCH_NAME == 'dev' }}
-        run: kubectl apply -f deployment/infrastructure/ingress/app-ingress-dev.yaml
+      # - name: Apply Ingress for DEV
+      #   if: ${{ env.BRANCH_NAME == 'dev' }}
+      #   run: kubectl apply -f ../../deployment/infrastructure/ingress/app-ingress-dev.yaml
 
-      - name: Apply Ingress for MAIN
-        if: ${{ env.BRANCH_NAME == 'main' }}
-        run: kubectl apply -f ../../deployment/infrastructure/ingress/app-ingress-${BRANCH_NAME}.yaml
+      # - name: Apply Ingress for MAIN
+      #   if: ${{ env.BRANCH_NAME == 'main' }}
+      #   run: kubectl apply -f ../../deployment/infrastructure/ingress/app-ingress-${BRANCH_NAME}.yaml
 
       - name: Deploy to Kubernetes
         run: |
           kubectl config set-context --current --namespace=${BRANCH_NAME}
-          kubectl set image deployment/communication-control communication-control=${{ env.IMAGE_BASE }}-${BRANCH_NAME}-${SHORT_SHA}
-          kubectl rollout status deployment/communication-control
+          kubectl apply -f ../../../deployment/app/map-client/map-client.deployment.yaml -n ${BRANCH_NAME}
+          kubectl set image deployment/map-client map-client=${{ env.IMAGE_BASE }}-${BRANCH_NAME}-${SHORT_SHA}
+          kubectl rollout status deployment/map-client
 
       - name: Set VITE_API_BASE_URL env var
         run: |
