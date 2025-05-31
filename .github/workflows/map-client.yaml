@@ -1,82 +1,82 @@
-# name: Build & Deploy CommunicationControl
+name: Build & Deploy CommunicationControl
 
-# on:
-#   push:
-#     branches: [ main, dev ]
-#   workflow_dispatch:
+on:
+  push:
+    branches: [ main, dev ]
+  workflow_dispatch:
 
-# env:
-#   IMAGE_BASE: registry.digitalocean.com/kpi-demo/hiveemulator:map-client
+env:
+  IMAGE_BASE: registry.digitalocean.com/kpi-demo/hiveemulator:map-client
 
-# jobs:
-#   build:
-#     runs-on: ubuntu-latest
-#     defaults:
-#       run:
-#         working-directory: src/MapClient
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/MapClient
 
-#     steps:
-#       - name: Checkout repository
-#         uses: actions/checkout@v4
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-#       - name: Set variables for branch and commit
-#         run: |
-#           BRANCH_NAME=${GITHUB_REF##*/}
-#           SHORT_SHA=${GITHUB_SHA::7}
-#           echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_ENV
-#           echo "SHORT_SHA=${SHORT_SHA}" >> $GITHUB_ENV
-#           echo ${BRANCH_NAME}
+      - name: Set variables for branch and commit
+        run: |
+          BRANCH_NAME=${GITHUB_REF##*/}
+          SHORT_SHA=${GITHUB_SHA::7}
+          echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_ENV
+          echo "SHORT_SHA=${SHORT_SHA}" >> $GITHUB_ENV
+          echo ${BRANCH_NAME}
         
-#         # Устанавливаем Node.js
+        # Устанавливаем Node.js
 
-#       - name: Setup Node.js
-#         uses: actions/setup-node@v3
-#         with:
-#           node-version: '18'
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
 
-#       - name: Install dependencies
-#         run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-#       - name: Build frontend
-#         run: npm run build
+      - name: Build frontend
+        run: npm run build
         
-#       - name: Log in to DigitalOcean Container Registry
-#         run: echo "${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}" | docker login registry.digitalocean.com -u kpi_token --password-stdin
+      - name: Log in to DigitalOcean Container Registry
+        run: echo "${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}" | docker login registry.digitalocean.com -u kpi_token --password-stdin
 
-#       - name: Build Docker image
-#         run: |
-#           docker build -f Dockerfile -t ${{ env.IMAGE_BASE }}-${BRANCH_NAME}-${SHORT_SHA} .
+      - name: Build Docker image
+        run: |
+          docker build -f Dockerfile -t ${{ env.IMAGE_BASE }}-${BRANCH_NAME}-${SHORT_SHA} .
 
-#       - name: Push Docker image
-#         run: |
-#           docker push ${{ env.IMAGE_BASE }}-${BRANCH_NAME}-${SHORT_SHA}
+      - name: Push Docker image
+        run: |
+          docker push ${{ env.IMAGE_BASE }}-${BRANCH_NAME}-${SHORT_SHA}
 
-#       - name: Set up kubeconfig
-#         run: |
-#           mkdir -p $HOME/.kube
-#           echo "${{ secrets.KUBECONFIG_DEV }}" | base64 -d > $HOME/.kube/config
+      - name: Set up kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG_DEV }}" | base64 -d > $HOME/.kube/config
 
-#       # - name: Apply Ingress for DEV
-#       #   if: ${{ env.BRANCH_NAME == 'dev' }}
-#       #   run: kubectl apply -f ../../deployment/infrastructure/ingress/app-ingress-dev.yaml
+      # - name: Apply Ingress for DEV
+      #   if: ${{ env.BRANCH_NAME == 'dev' }}
+      #   run: kubectl apply -f ../../deployment/infrastructure/ingress/app-ingress-dev.yaml
 
-#       # - name: Apply Ingress for MAIN
-#       #   if: ${{ env.BRANCH_NAME == 'main' }}
-#       #   run: kubectl apply -f ../../deployment/infrastructure/ingress/app-ingress-${BRANCH_NAME}.yaml
+      # - name: Apply Ingress for MAIN
+      #   if: ${{ env.BRANCH_NAME == 'main' }}
+      #   run: kubectl apply -f ../../deployment/infrastructure/ingress/app-ingress-${BRANCH_NAME}.yaml
 
-#       - name: Deploy to Kubernetes
-#         run: |
-#           kubectl config set-context --current --namespace=${BRANCH_NAME}
-#           kubectl apply -f ../../deployment/app/map-client/map-client.deployment.yaml -n ${BRANCH_NAME}
-#           kubectl set image deployment/map-client map-client=${{ env.IMAGE_BASE }}-${BRANCH_NAME}-${SHORT_SHA}
-#           kubectl rollout status deployment/map-client
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl config set-context --current --namespace=${BRANCH_NAME}
+          kubectl apply -f ../../deployment/app/map-client/map-client.deployment.yaml -n ${BRANCH_NAME}
+          kubectl set image deployment/map-client map-client=${{ env.IMAGE_BASE }}-${BRANCH_NAME}-${SHORT_SHA}
+          kubectl rollout status deployment/map-client
 
-#       - name: Set VITE_API_BASE_URL env var
-#         run: |
-#           if [[ "${BRANCH_NAME}" == "main" ]]; then
-#             LB_IP=${{ secrets.LB_IP_MAIN }}
-#           else
-#             LB_IP=${{ secrets.LB_IP_DEV }}
-#           fi
+      - name: Set VITE_API_BASE_URL env var
+        run: |
+          if [[ "${BRANCH_NAME}" == "main" ]]; then
+            LB_IP=${{ secrets.LB_IP_MAIN }}
+          else
+            LB_IP=${{ secrets.LB_IP_DEV }}
+          fi
 
-#           kubectl set env deployment/map-client VITE_API_BASE_URL=http://$LB_IP/communication/api/v1/client -n $BRANCH_NAME
+          kubectl set env deployment/map-client VITE_API_BASE_URL=http://$LB_IP/communication/api/v1/client -n $BRANCH_NAME
