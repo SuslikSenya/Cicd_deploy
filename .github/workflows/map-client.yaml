@@ -56,11 +56,11 @@ jobs:
 
       - name: Apply Ingress for DEV
         if: ${{ env.BRANCH_NAME == 'dev' }}
-        run: kubectl apply -f deployment/app/ingress/app-ingress-dev.yaml
+        run: kubectl apply -f deployment/infrastructure/ingress/app-ingress-dev.yaml
 
       - name: Apply Ingress for MAIN
         if: ${{ env.BRANCH_NAME == 'main' }}
-        run: kubectl apply -f deployment/app/ingress/app-ingress-main.yaml
+        run: kubectl apply -f deployment/infrastructure/ingress/app-ingress-main.yaml
 
       - name: Deploy to Kubernetes
         run: |

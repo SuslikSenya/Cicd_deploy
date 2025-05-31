@@ -48,5 +48,7 @@ jobs:
       - name: Deploy to Kubernetes
         run: |
           kubectl config set-context --current --namespace=${BRANCH_NAME}
+          kubectl apply -f deployment/app/communication-control-deployment.yaml
+          kubectl apply -f deployment/infrastructure/ingress/app-ingress-${BRANCH_NAME}.yaml
           kubectl set image deployment/communication-control communication-control=${{ env.IMAGE_BASE }}-${BRANCH_NAME}-${SHORT_SHA}
           kubectl rollout status deployment/communication-control
