@@ -3,10 +3,10 @@ kind: Service
 metadata:
   name: com-control
 spec:
-  type: LoadBalancer
+  # type: LoadBalancer
   selector:
     app: com-control
   ports:
     - port: 80
       targetPort: 8080
-  externalTrafficPolicy: Local
+  # externalTrafficPolicy: Local
