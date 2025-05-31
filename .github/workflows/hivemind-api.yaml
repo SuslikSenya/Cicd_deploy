@@ -47,7 +47,15 @@ jobs:
 
       - name: Deploy to Kubernetes
         run: |
-          kubectl config set-context --current --namespace=${BRANCH_NAME}
-          kubectl apply -f ../../../deployment/app/hivemind-api/hivemind-api.deployment.yaml -n dev
+          # Проверяем/обновляем imagePullSecret
+          kubectl create secret docker-registry digitalocean-registry-secret \
+            --docker-server=registry.digitalocean.com \
+            --docker-username=kpi_token \
+            --docker-password=${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }} \
+            --docker-email=alexslkarate@gmail.com \
+            --namespace=${{ env.NAMESPACE }} \
+            --dry-run=client -o yaml | kubectl apply -f -
+            
+          kubectl apply -f ../../../deployment/app/hivemind-api/hivemind-api.deployment.yaml -n ${{ env.NAMESPACE }}
           kubectl set image deployment/hivemind-api hivemind-api=${{ env.IMAGE_BASE }}-${BRANCH_NAME}-${SHORT_SHA}
           kubectl rollout status deployment/hivemind-api
