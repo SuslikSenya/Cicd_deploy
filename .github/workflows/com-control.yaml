@@ -57,6 +57,6 @@ jobs:
       - name: Deploy to Kubernetes
         run: |
           kubectl config set-context --current --namespace=${BRANCH_NAME}
-          kubectl apply -f ../../../deployment/app/com-control/com-control.deployment.yaml -n dev
+          kubectl apply -f ../../../deployment/app/communication-control/com-control.deployment.yaml -n dev
           kubectl set image deployment/com-control com-control=${{ env.IMAGE_BASE }}-${BRANCH_NAME}-${SHORT_SHA}
           kubectl rollout status deployment/comm-control
