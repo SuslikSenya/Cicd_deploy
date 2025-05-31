@@ -14,7 +14,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: communication-control
+                name: com-control
                 port:
                   number: 80
           - path: /

@@ -48,6 +48,14 @@ jobs:
       - name: Deploy to Kubernetes
         run: |
           kubectl config set-context --current --namespace=${BRANCH_NAME}
+
+          # Установка ingress-nginx если надо
+          if ! kubectl get ns ingress-nginx > /dev/null 2>&1; then
+            kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.9.1/deploy/static/provider/cloud/deploy.yaml
+          else
+            echo "Ingress-nginx already installed"
+          fi
+          
           kubectl apply -f ../../../deployment/app/hivemind-api/hivemind-api.deployment.yaml -n ${BRANCH_NAME}
-          kubectl set image deployment/hivemind-api hivemind-api=${{ env.IMAGE_BASE }}-${BRANCH_NAME}-${SHORT_SHA}
-          kubectl rollout status deployment/hivemind-api
+          kubectl set image deployment/hivemind-api hivemind-api=${{ env.IMAGE_BASE }}-${BRANCH_NAME}-${SHORT_SHA} -n ${BRANCH_NAME}
+          kubectl rollout status deployment/hivemind-api -n ${BRANCH_NAME}

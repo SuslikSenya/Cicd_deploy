@@ -79,4 +79,5 @@ jobs:
             LB_IP=${{ secrets.LB_IP_DEV }}
           fi
 
+          echo LB_IP_DEV
           kubectl set env deployment/map-client VITE_API_BASE_URL=http://$LB_IP/communication/api/v1/client -n $BRANCH_NAME
