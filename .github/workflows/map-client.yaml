@@ -65,7 +65,7 @@ jobs:
       - name: Deploy to Kubernetes
         run: |
           kubectl config set-context --current --namespace=${BRANCH_NAME}
-          kubectl apply -f ../../../deployment/app/map-client/map-client.deployment.yaml -n ${BRANCH_NAME}
+          kubectl apply -f ../../deployment/app/map-client/map-client.deployment.yaml -n ${BRANCH_NAME}
           kubectl set image deployment/map-client map-client=${{ env.IMAGE_BASE }}-${BRANCH_NAME}-${SHORT_SHA}
           kubectl rollout status deployment/map-client
 

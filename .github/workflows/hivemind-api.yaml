@@ -48,6 +48,6 @@ jobs:
       - name: Deploy to Kubernetes
         run: |
           kubectl config set-context --current --namespace=${BRANCH_NAME}
-          kubectl apply -f ../../../deployment/app/hivemind-api/hivemind-api.deployment.yaml -n ${{ env.NAMESPACE }}
+          kubectl apply -f ../../../deployment/app/hivemind-api/hivemind-api.deployment.yaml -n ${BRANCH_NAME}
           kubectl set image deployment/hivemind-api hivemind-api=${{ env.IMAGE_BASE }}-${BRANCH_NAME}-${SHORT_SHA}
           kubectl rollout status deployment/hivemind-api
