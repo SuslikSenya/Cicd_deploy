@@ -1,0 +1,23 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ingress-nginx-pods-reader
+  namespace: ingress-nginx-dev
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ingress-nginx-pods-reader-binding
+  namespace: ingress-nginx-dev
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: ingress-nginx-pods-reader
+subjects:
+  - kind: ServiceAccount
+    name: ingress-nginx-dev
+    namespace: ingress-nginx-dev

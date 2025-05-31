@@ -1,0 +1,163 @@
+---
+# 1. Namespaces
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ingress-nginx-main
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ingress-nginx-dev
+---
+# 2. ServiceAccounts
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ingress-nginx-main
+  namespace: ingress-nginx-main
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ingress-nginx-dev
+  namespace: ingress-nginx-dev
+---
+# 3. ClusterRoleBindings (общее ClusterRole используется из официального манифеста ingress-nginx)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ingress-nginx-main
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ingress-nginx
+subjects:
+  - kind: ServiceAccount
+    name: ingress-nginx-main
+    namespace: ingress-nginx-main
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ingress-nginx-dev
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ingress-nginx
+subjects:
+  - kind: ServiceAccount
+    name: ingress-nginx-dev
+    namespace: ingress-nginx-dev
+---
+# 4. Deployment для ingress-nginx-main
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ingress-nginx-controller-main
+  namespace: ingress-nginx-main
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ingress-nginx-main
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ingress-nginx-main
+    spec:
+      serviceAccountName: ingress-nginx-main
+      containers:
+        - name: controller
+          image: k8s.gcr.io/ingress-nginx/controller:v1.8.1
+          args:
+            - /nginx-ingress-controller
+            - --ingress-class=nginx-main
+          ports:
+            - containerPort: 80
+            - containerPort: 443
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+---
+# 5. Service LoadBalancer для ingress-nginx-main
+apiVersion: v1
+kind: Service
+metadata:
+  name: ingress-nginx-controller-main
+  namespace: ingress-nginx-main
+spec:
+  type: LoadBalancer
+  selector:
+    app.kubernetes.io/name: ingress-nginx-main
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      name: http
+    - port: 443
+      targetPort: 443
+      protocol: TCP
+      name: https
+---
+# 6. Deployment для ingress-nginx-dev
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ingress-nginx-controller-dev
+  namespace: ingress-nginx-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ingress-nginx-dev
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ingress-nginx-dev
+    spec:
+      serviceAccountName: ingress-nginx-dev
+      containers:
+        - name: controller
+          image: k8s.gcr.io/ingress-nginx/controller:v1.8.1
+          args:
+            - /nginx-ingress-controller
+            - --ingress-class=nginx-dev
+          ports:
+            - containerPort: 80
+            - containerPort: 443
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+---
+# 7. Service LoadBalancer для ingress-nginx-dev
+apiVersion: v1
+kind: Service
+metadata:
+  name: ingress-nginx-controller-dev
+  namespace: ingress-nginx-dev
+spec:
+  type: LoadBalancer
+  selector:
+    app.kubernetes.io/name: ingress-nginx-dev
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      name: http
+    - port: 443
+      targetPort: 443
+      protocol: TCP
+      name: https
