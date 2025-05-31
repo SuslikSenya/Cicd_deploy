@@ -1,53 +1,53 @@
-name: Build & Deploy CommunicationControl
+# name: Build & Deploy CommunicationControl
 
-on:
-  push:
-    branches: [ main, dev ]
-  workflow_dispatch:
+# on:
+#   push:
+#     branches: [ main, dev ]
+#   workflow_dispatch:
 
-env:
-  IMAGE_BASE: registry.digitalocean.com/kpi-demo/hiveemulator:hivemind-api
+# env:
+#   IMAGE_BASE: registry.digitalocean.com/kpi-demo/hiveemulator:hivemind-api
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: src/CommunicationControl/DevOpsProject.HiveMind.API
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
+#     defaults:
+#       run:
+#         working-directory: src/CommunicationControl/DevOpsProject.HiveMind.API
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+#     steps:
+#       - name: Checkout repository
+#         uses: actions/checkout@v4
 
-      - name: Set variables for branch and commit
-        run: |
-          BRANCH_NAME=${GITHUB_REF##*/}
-          SHORT_SHA=${GITHUB_SHA::7}
-          echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_ENV
-          echo "SHORT_SHA=${SHORT_SHA}" >> $GITHUB_ENV
+#       - name: Set variables for branch and commit
+#         run: |
+#           BRANCH_NAME=${GITHUB_REF##*/}
+#           SHORT_SHA=${GITHUB_SHA::7}
+#           echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_ENV
+#           echo "SHORT_SHA=${SHORT_SHA}" >> $GITHUB_ENV
 
-      - name: Publish project
-        run: dotnet publish -c Release -p:PublishProfile=FolderProfile -o ./published DevOpsProject.HiveMind.API.csproj
+#       - name: Publish project
+#         run: dotnet publish -c Release -p:PublishProfile=FolderProfile -o ./published DevOpsProject.HiveMind.API.csproj
 
-      - name: Log in to DigitalOcean Container Registry
-        run: echo "${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}" | docker login registry.digitalocean.com -u kpi_token --password-stdin
+#       - name: Log in to DigitalOcean Container Registry
+#         run: echo "${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}" | docker login registry.digitalocean.com -u kpi_token --password-stdin
 
-      - name: Build Docker image
-        run: |
-          docker build -f Dockerfile -t ${{ env.IMAGE_BASE }}-${BRANCH_NAME}-${SHORT_SHA} .
+#       - name: Build Docker image
+#         run: |
+#           docker build -f Dockerfile -t ${{ env.IMAGE_BASE }}-${BRANCH_NAME}-${SHORT_SHA} .
 
-      - name: Push Docker image
-        run: |
-          docker push ${{ env.IMAGE_BASE }}-${BRANCH_NAME}-${SHORT_SHA}
+#       - name: Push Docker image
+#         run: |
+#           docker push ${{ env.IMAGE_BASE }}-${BRANCH_NAME}-${SHORT_SHA}
 
-      - name: Set up kubeconfig
-        run: |
-          mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBECONFIG_DEV }}" | base64 -d > $HOME/.kube/config
+#       - name: Set up kubeconfig
+#         run: |
+#           mkdir -p $HOME/.kube
+#           echo "${{ secrets.KUBECONFIG_DEV }}" | base64 -d > $HOME/.kube/config
 
-      - name: Deploy to Kubernetes
-        run: |
-          kubectl config set-context --current --namespace=${BRANCH_NAME}
-          kubectl apply -f ../../../deployment/app/hivemind-api/hivemind-api.deployment.yaml -n ${BRANCH_NAME}
-          kubectl set image deployment/hivemind-api hivemind-api=${{ env.IMAGE_BASE }}-${BRANCH_NAME}-${SHORT_SHA}
-          kubectl rollout status deployment/hivemind-api
+#       - name: Deploy to Kubernetes
+#         run: |
+#           kubectl config set-context --current --namespace=${BRANCH_NAME}
+#           kubectl apply -f ../../../deployment/app/hivemind-api/hivemind-api.deployment.yaml -n ${BRANCH_NAME}
+#           kubectl set image deployment/hivemind-api hivemind-api=${{ env.IMAGE_BASE }}-${BRANCH_NAME}-${SHORT_SHA}
+#           kubectl rollout status deployment/hivemind-api
