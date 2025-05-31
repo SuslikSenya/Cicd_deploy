@@ -27,13 +27,13 @@ spec:
             limits:
               memory: "256Mi"
               cpu: "250m"
-          volumeMounts:
-            - name: config-volume
-              mountPath: /usr/share/nginx/html/config.json
-              subPath: config.json
+          # volumeMounts:
+          #   - name: config-volume
+          #     mountPath: /usr/share/nginx/html/config.json
+          #     subPath: config.json
       volumes:
         - name: config-volume
-          configMap:
-            name: map-client-config
+          # configMap:
+          #   name: map-client-config
       imagePullSecrets:
         - name: digitalocean-registry-secret
