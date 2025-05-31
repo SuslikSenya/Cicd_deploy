@@ -21,10 +21,25 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      # Добавленные шаги для C#
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '6.0.x' # Укажите вашу версию .NET
+
+      - name: Restore dependencies
+        run: dotnet restore YourSolution.sln  # Замените на ваш .sln или .csproj
+
+      - name: Build project
+        run: dotnet build YourSolution.sln --configuration Release --no-restore
+
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v2
         with:
           languages: ${{ matrix.language }}
+          # Для сложных проектов может потребоваться:
+          # build-mode: explicit
+          # paths: src/  # Укажите путь к C# коду если нужно
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
